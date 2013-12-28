@@ -1,0 +1,25 @@
+#!/usr/bin/ruby
+
+# Grab NDL from clipboard
+ndl = IO.popen('pbpaste', 'r+').read
+exit if !ndl.include? '<NDL>'
+
+# Parse NDL
+database = ndl.scan(/<REPLICA (\w{8}):(\w{8})>/).join
+view = ndl.scan(/<VIEW \w\w(\w{8}):(\w{8})-\w\w(\w{8}):(\w{8})>/).join
+note = ndl.scan(/<NOTE \w\w(\w{8}):(\w{8})-\w\w(\w{8}):(\w{8})>/).join
+server = ndl.scan(/<HINT>CN=(\w{8})\/\w\w=.*<\/HINT>/).join
+
+# It seems the Notes doesn't mind if there isn't a <view> and <note>
+# element present in the link.  If links to DBs becomes a problem this
+# is one aspect of this script to look closely at.
+#           notes://<server_name>/<database>
+#           notes://<server_name>/<database>/<view>/<note>
+notesurl = "notes://"+server+"/"+database+"/"+view+"/"+note
+
+# Copy URL to clipboard
+IO.popen('pbcopy', 'w').puts notesurl
+
+if ARGV[0]
+  print notesurl
+end
